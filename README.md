@@ -7,15 +7,15 @@
 <p align="center">有 32 种表情的网页角色与 Windows 桌面伙伴。</p>
 
 <p align="center">
-  <a href="https://haonanyu123.github.io/little-P-/">在线体验</a> ·
-  <a href="https://github.com/HaonanYu123/little-P-/releases/latest">下载 Windows 桌宠</a> ·
+  <a href="https://haonanyu123.github.io/little-p/">在线体验</a> ·
+  <a href="https://github.com/HaonanYu123/little-p/releases/latest">下载 Windows 桌宠</a> ·
   <a href="THIRD_PARTY_NOTICES.md">许可说明</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/HaonanYu123/little-P-/actions/workflows/pages.yml"><img alt="Pages" src="https://github.com/HaonanYu123/little-P-/actions/workflows/pages.yml/badge.svg"></a>
-  <a href="https://github.com/HaonanYu123/little-P-/actions/workflows/checks.yml"><img alt="Checks" src="https://github.com/HaonanYu123/little-P-/actions/workflows/checks.yml/badge.svg"></a>
-  <a href="https://github.com/HaonanYu123/little-P-/releases"><img alt="Release" src="https://img.shields.io/github/v/release/HaonanYu123/little-P-?display_name=tag"></a>
+  <a href="https://github.com/HaonanYu123/little-p/actions/workflows/pages.yml"><img alt="Pages" src="https://github.com/HaonanYu123/little-p/actions/workflows/pages.yml/badge.svg"></a>
+  <a href="https://github.com/HaonanYu123/little-p/actions/workflows/checks.yml"><img alt="Checks" src="https://github.com/HaonanYu123/little-p/actions/workflows/checks.yml/badge.svg"></a>
+  <a href="https://github.com/HaonanYu123/little-p/releases"><img alt="Release" src="https://img.shields.io/github/v/release/HaonanYu123/little-p?display_name=tag"></a>
 </p>
 
 ## 体验
@@ -36,9 +36,9 @@
 
 ## 安装和使用
 
-1. 从 [最新 Release](https://github.com/HaonanYu123/little-P-/releases/latest) 下载 `LittleP-Setup.exe`。
+1. 从 [最新 Release](https://github.com/HaonanYu123/little-p/releases/latest) 下载 `LittleP-Setup.exe`。
 2. 完成 Windows 安装。安装器会创建快捷方式并注册 `littlep://`。
-3. 打开[在线网页](https://haonanyu123.github.io/little-P-/)，选择造型和表情，点击“召唤”。
+3. 打开[在线网页](https://haonanyu123.github.io/little-p/)，选择造型和表情，点击“召唤”。
 4. 拖动小 P 移动，滚轮切换表情，右键打开完整表情面板。
 
 ## 工作方式

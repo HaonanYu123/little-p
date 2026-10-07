@@ -59,15 +59,6 @@ body.stage-open { overflow:hidden; }
 .toast { position:fixed; bottom:24px; left:50%; z-index:150; transform:translateX(-50%); width:max-content; max-width:calc(100vw - 32px); padding:12px 18px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--text); font-size:13px; text-align:center; opacity:0; pointer-events:none; }
 .toast.show { opacity:1; }
 .toast.danger { color:#bf4d57; }
-.web-pet { position:fixed; z-index:140; width:220px; height:250px; overflow:hidden; border:1px solid var(--line); border-radius:18px; background:color-mix(in srgb,var(--surface) 94%,transparent); box-shadow:0 18px 50px #1113; backdrop-filter:blur(14px); opacity:0; transform:translateY(18px) scale(.94); transition:opacity .2s ease,transform .28s cubic-bezier(.2,.8,.2,1); }
-.web-pet.is-visible { opacity:1; transform:translateY(0) scale(1); }
-.web-pet-handle { display:flex; align-items:center; justify-content:space-between; height:38px; padding:0 8px 0 14px; border-bottom:1px solid var(--line); color:var(--muted); cursor:grab; touch-action:none; user-select:none; }
-.web-pet-handle:active { cursor:grabbing; }
-.web-pet-title { font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; }
-.web-pet-close { display:grid; place-items:center; width:28px; height:28px; padding:0; border:0; border-radius:50%; background:transparent; color:var(--muted); font-size:20px; line-height:1; }
-.web-pet-close:hover { background:var(--hover); color:var(--text); }
-.web-pet-canvas { display:block; width:100%; height:212px; padding:4px 10px 10px; border:0; background:transparent; }
-.web-pet-canvas .mm-svg { width:100%; height:100%; }
 .robot-svg { contain:layout style; }
 .mm-svg { touch-action:manipulation; }
 @media(max-width:1100px) {
@@ -103,8 +94,6 @@ body.stage-open { overflow:hidden; }
   .emo-meta { gap:10px; }
   .emo-name { font-size:17px; }
   .pager-ind { font-size:10px; }
-  .web-pet { width:180px; height:212px; }
-  .web-pet-canvas { height:174px; padding:2px 6px 8px; }
 }
 /* Restore the original full-width interactive background above the grid. */
 .hero { position:relative; isolation:isolate; min-height:620px; height:min(78svh,820px); overflow:hidden; background:var(--hero); }

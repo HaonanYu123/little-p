@@ -62,100 +62,69 @@
   var heroVisible = true;
   var tipsTimer = 0;
   var toastTimer = 0;
-  var elWebPet = $('webPet');
-  var elWebPetCanvas = $('webPetCanvas');
-  var elWebPetHandle = $('webPetHandle');
-  var webPet = null;
-  var webPetCharacter = '';
-  var webPetHideTimer = 0;
+  var desktopActive = false;
+  var desktopSyncTimer = 0;
+  // Only the page served by the installed desktop service can use its HTTP API.
+  // Static localhost previews behave like the public site and open littlep://.
+  var desktopServicePage = location.protocol === 'http:' &&
+    (location.hostname === '127.0.0.1' || location.hostname === 'localhost') &&
+    location.port === '8086';
+  var desktopApiBase = '';
 
-  function buildWebPet() {
-    if (webPet) {
-      webPet.destroy();
-      unwatchGaze(elWebPetCanvas);
+  async function callDesktop(path, state) {
+    var response;
+    try {
+      response = await fetch(desktopApiBase + path, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state)
+      });
+    } catch (error) { throw new Error(I.t('summonStartServer')); }
+    if (response.status === 404 || response.status === 405 || response.status === 501) {
+      throw new Error(I.t('summonStartServer'));
     }
-    webPet = createInst(elWebPetCanvas, {
-      character: prefs.character,
-      emotion: selectedId,
-      idle: { standbyAfter: 45000, sleepAfter: 150000 },
-      label: I.t('webPetLabel')
-    });
-    webPetCharacter = prefs.character;
-    webPet.setStyle({ sketch: prefs.sketch ? 1 : 0 });
-    watchGaze(webPet, elWebPetCanvas);
+    var text, result;
+    try {
+      text = await response.text();
+      result = JSON.parse(text);
+    } catch (error) { throw new Error(I.t('summonInvalidResponse')); }
+    if (!result || typeof result !== 'object') throw new Error(I.t('summonInvalidResponse'));
+    if (!response.ok || !result.ok) throw new Error(result.message || I.t('summonFailed'));
+    return result;
   }
 
-  function syncWebPet() {
-    if (!webPet || elWebPet.hidden) return;
-    if (webPetCharacter !== prefs.character) buildWebPet();
-    if (webPet.emotionId !== selectedId) webPet.setEmotion(selectedId, { auto: true });
-    webPet.setStyle({ sketch: prefs.sketch ? 1 : 0 });
+  function desktopState() {
+    return { character: prefs.character, emotion: selectedId, sketch: !!prefs.sketch, lang: prefs.lang, theme: prefs.theme };
   }
-
-  function clampWebPet() {
-    if (elWebPet.hidden || !elWebPet.style.left) return;
-    var rect = elWebPet.getBoundingClientRect();
-    var left = Math.min(Math.max(8, rect.left), Math.max(8, innerWidth - rect.width - 8));
-    var top = Math.min(Math.max(8, rect.top), Math.max(8, innerHeight - rect.height - 8));
-    elWebPet.style.left = left + 'px';
-    elWebPet.style.top = top + 'px';
+  function syncDesktop() {
+    if (!desktopActive) return;
+    clearTimeout(desktopSyncTimer);
+    desktopSyncTimer = setTimeout(function () {
+      callDesktop('/api/pet/state', desktopState())
+        .then(function (r) { desktopActive = !!r.active; })
+        .catch(function () { desktopActive = false; });
+    }, 120);
   }
-
-  function summonWebPet() {
-    clearTimeout(webPetHideTimer);
-    elWebPet.hidden = false;
-    if (!webPet || webPetCharacter !== prefs.character) buildWebPet();
-    syncWebPet();
-    webPet.setActive(true);
-    if (!elWebPet.style.left) {
-      var rect = elWebPet.getBoundingClientRect();
-      elWebPet.style.left = Math.max(12, innerWidth - rect.width - 24) + 'px';
-      elWebPet.style.top = Math.max(12, innerHeight - rect.height - 24) + 'px';
+  $('summonPet').addEventListener('click', async function () {
+    var btn = $('summonPet');
+    if (!desktopServicePage) {
+      var protocol = distribution.protocol || 'littlep';
+      var state = desktopState();
+      var query = new URLSearchParams({
+        character: state.character, emotion: state.emotion,
+        sketch: String(state.sketch), lang: state.lang, theme: state.theme
+      });
+      window.location.href = protocol + '://summon?' + query.toString();
+      toast(I.t('summonOpeningApp'));
+      return;
     }
-    clampWebPet();
-    requestAnimationFrame(function () { elWebPet.classList.add('is-visible'); });
-    if (!webPet.signature || !webPet.signature(0.8)) webPet.spin(1);
-    toast(I.t('summonSuccess'), 'ok');
-  }
-
-  function dismissWebPet() {
-    elWebPet.classList.remove('is-visible');
-    if (webPet) webPet.setActive(false);
-    clearTimeout(webPetHideTimer);
-    webPetHideTimer = setTimeout(function () {
-      if (!elWebPet.classList.contains('is-visible')) elWebPet.hidden = true;
-    }, 240);
-  }
-
-  $('summonPet').addEventListener('click', summonWebPet);
-  $('webPetClose').addEventListener('click', dismissWebPet);
-  elWebPetCanvas.addEventListener('click', function () {
-    if (!webPet) return;
-    if (webPet.celebrate) webPet.celebrate(1);
-    else if (!webPet.signature || !webPet.signature(1)) webPet.spin(1);
+    btn.disabled = true;
+    btn.querySelector('[data-i18n]').textContent = I.t('summonBusy');
+    try {
+      await callDesktop('/api/pet/summon', desktopState());
+      desktopActive = true;
+      toast(I.t('summonSuccess'), 'ok');
+    } catch (error) { toast(error.message || I.t('summonFailed'), 'danger'); }
+    finally { btn.disabled = false; btn.querySelector('[data-i18n]').textContent = I.t('summonLabel'); }
   });
-
-  var webPetDrag = null;
-  elWebPetHandle.addEventListener('pointerdown', function (event) {
-    if (event.target.closest('button')) return;
-    var rect = elWebPet.getBoundingClientRect();
-    webPetDrag = { id: event.pointerId, dx: event.clientX - rect.left, dy: event.clientY - rect.top };
-    elWebPetHandle.setPointerCapture(event.pointerId);
-    event.preventDefault();
-  });
-  elWebPetHandle.addEventListener('pointermove', function (event) {
-    if (!webPetDrag || webPetDrag.id !== event.pointerId) return;
-    var rect = elWebPet.getBoundingClientRect();
-    elWebPet.style.left = Math.min(Math.max(8, event.clientX - webPetDrag.dx), Math.max(8, innerWidth - rect.width - 8)) + 'px';
-    elWebPet.style.top = Math.min(Math.max(8, event.clientY - webPetDrag.dy), Math.max(8, innerHeight - rect.height - 8)) + 'px';
-  });
-  function stopWebPetDrag(event) {
-    if (!webPetDrag || webPetDrag.id !== event.pointerId) return;
-    webPetDrag = null;
-  }
-  elWebPetHandle.addEventListener('pointerup', stopWebPetDrag);
-  elWebPetHandle.addEventListener('pointercancel', stopWebPetDrag);
-  window.addEventListener('resize', clampWebPet, { passive: true });
 
   /* ---------------- 文案工具 ---------------- */
   function dispName(def) {
@@ -233,7 +202,7 @@
       selectedId = e.id;
       updateMeta(e.def);
       highlightSelected();
-      syncWebPet();
+      syncDesktop();
     });
     main.on('tips', function (e) { showTips(e.text); });
     main.on('error', function (e) { toast(e.message, 'danger'); });
@@ -253,7 +222,7 @@
     highlightCast();
     buildBrand();
     buildHero();
-    syncWebPet();
+    syncDesktop();
   }
 
   function highlightCast() {
@@ -460,7 +429,7 @@
     prefs.theme = theme === 'light' ? 'light' : 'dark';
     savePrefs();
     document.documentElement.setAttribute('data-theme', prefs.theme);
-    syncWebPet();
+    syncDesktop();
     elThemeToggle.title = prefs.theme === 'dark' ? I.t('themeToLight') : I.t('themeToDark');
     elThemeToggle.setAttribute('aria-label', elThemeToggle.title);
   }
@@ -493,7 +462,7 @@
     relabelThumbs();
     relabelCast();
     updateMeta();
-    syncWebPet();
+    syncDesktop();
   }
   elLangToggle.addEventListener('click', function () {
     prefs.lang = prefs.lang === 'zh' ? 'en' : 'zh';
@@ -531,7 +500,7 @@
     var v = prefs.sketch ? 1 : 0;
     main.setStyle({ sketch: v });
     thumbs.forEach(function (t) { t.engine.setStyle({ sketch: v }); });
-    syncWebPet();
+    syncDesktop();
   }
   elSketchToggle.addEventListener('change', function () {
     prefs.sketch = elSketchToggle.checked;

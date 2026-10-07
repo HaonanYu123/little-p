@@ -1,0 +1,33 @@
+name: Bug report
+description: 报告网页或 Windows 桌宠的问题
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: 出现问题的位置
+      options:
+        - GitHub Pages 网页
+        - Windows 桌宠
+        - 安装或更新
+        - 本地开发
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请写明点击了什么、预期发生什么、实际发生什么。
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 运行环境
+      placeholder: Windows 11 / Chrome 版本等
+  - type: textarea
+    id: logs
+    attributes:
+      label: 截图或日志
+      description: 可附上截图；本地开发日志位于 output/desktop-pet.log。

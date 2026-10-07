@@ -64,10 +64,12 @@
   var toastTimer = 0;
   var desktopActive = false;
   var desktopSyncTimer = 0;
-  // Live Server and other loopback previews serve files, not the native pet API.
-  var loopbackPreview = location.protocol === 'http:' &&
-    (location.hostname === '127.0.0.1' || location.hostname === 'localhost');
-  var desktopApiBase = loopbackPreview && location.port !== '8086' ? 'http://127.0.0.1:8086' : '';
+  // Only the page served by the installed desktop service can use its HTTP API.
+  // Static localhost previews behave like the public site and open littlep://.
+  var desktopServicePage = location.protocol === 'http:' &&
+    (location.hostname === '127.0.0.1' || location.hostname === 'localhost') &&
+    location.port === '8086';
+  var desktopApiBase = '';
 
   async function callDesktop(path, state) {
     var response;
@@ -103,7 +105,7 @@
   }
   $('summonPet').addEventListener('click', async function () {
     var btn = $('summonPet');
-    if (!loopbackPreview) {
+    if (!desktopServicePage) {
       var protocol = distribution.protocol || 'littlep';
       var state = desktopState();
       var query = new URLSearchParams({

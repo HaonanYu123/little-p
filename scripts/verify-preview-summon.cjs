@@ -1,9 +1,9 @@
-// Regression: static previews must use the native service, never their own POST route.
+// Regression: the page served by the desktop service uses its native HTTP API.
 const { chromium } = require('../output/qa-tools/node_modules/playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const bridge = 'http://127.0.0.1:8086';
-const preview = 'http://127.0.0.1:5500';
+const preview = bridge;
 const status = async () => (await fetch(bridge + '/api/pet/status')).json();
 async function waitState(test) {
   for (let i=0; i<60; i++) { const s=await status(); if(test(s)) return s; await new Promise(r=>setTimeout(r,100)); }
@@ -23,8 +23,7 @@ async function waitState(test) {
     await page.waitForFunction(()=>document.getElementById('toast').textContent.includes('已来到桌面'));
     const pet=await waitState(s=>s.active&&s.ready&&s.state.character==='robot');
     check('Static preview summons the classic pet',pet.pid>0);
-    check('Preview sends POST to port 8086',requests.some(r=>r.method==='POST'&&r.url===bridge+'/api/pet/summon'));
-    check('No pet API POST reaches the static server',!requests.some(r=>r.method==='POST'&&r.url.startsWith(preview)));
+    check('Desktop service page posts to its native API',requests.some(r=>r.method==='POST'&&r.url===bridge+'/api/pet/summon'));
     await page.locator('#summonPet').click();
     check('Preview reuses the same native instance',(await status()).pid===pet.pid);
     await page.evaluate(()=>EG_MAIN.setEmotion('13'));
@@ -43,14 +42,14 @@ async function waitState(test) {
     for(const scenario of [
       {name:'Empty success response has a helpful message',code:200,body:'',message:'服务返回异常'},
       {name:'Malformed JSON never exposes a parsing exception',code:200,body:'{bad',message:'服务返回异常'},
-      {name:'Empty 405 response explains how to start the service',code:405,body:'',message:'start.bat'},
+      {name:'Empty 405 response explains that Little P is required',code:405,body:'',message:'Little P'},
       {name:'Structured launch errors remain visible',code:503,body:JSON.stringify({ok:false,message:'测试启动失败'}),message:'测试启动失败'},
-      {name:'Unavailable service explains how to start it',abort:true,message:'start.bat'}
+      {name:'Unavailable service explains that Little P is required',abort:true,message:'Little P'}
     ]) {
       await page.route(mockUrl,async route=>{
         if(route.request().method()==='OPTIONS')return route.continue();
         if(scenario.abort)return route.abort('connectionrefused');
-        return route.fulfill({status:scenario.code,contentType:'application/json',body:scenario.body,headers:{'Access-Control-Allow-Origin':preview}});
+        return route.fulfill({status:scenario.code,contentType:'application/json',body:scenario.body});
       });
       await page.locator('#summonPet').click();
       await page.waitForFunction(()=>!document.getElementById('summonPet').disabled);

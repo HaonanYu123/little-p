@@ -10,13 +10,19 @@ const root = path.resolve(__dirname, '..');
   const results = [], errors = [];
   try {
     const context = await browser.newContext();
-    await context.route('https://preview.example/**', async route => {
+    const serveStatic = async route => {
       const pathname = new URL(route.request().url()).pathname;
       const file = path.join(root, pathname === '/' ? 'index.html' : pathname);
       const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml' };
       await route.fulfill({ body: fs.readFileSync(file), contentType: mime[path.extname(file)] || 'application/octet-stream' });
-    });
-    for (const source of ['https://preview.example/', pathToFileURL(path.join(root, 'index.html')).href]) {
+    };
+    await context.route('https://preview.example/**', serveStatic);
+    await context.route('http://127.0.0.1:5500/**', serveStatic);
+    for (const source of [
+      'https://preview.example/',
+      'http://127.0.0.1:5500/',
+      pathToFileURL(path.join(root, 'index.html')).href
+    ]) {
       const page = await context.newPage();
       const requests = [];
       page.on('pageerror', error => errors.push(error.message));
@@ -33,7 +39,11 @@ const root = path.resolve(__dirname, '..');
       assert.equal(requests.filter(url => url.includes('/api/pet/')).length, 0);
       assert.ok((await page.locator('#toast').textContent()).includes('正在打开 Little P'));
       assert.equal(await page.locator('#summonPet').isEnabled(), true);
-      results.push(source.startsWith('file:') ? 'Direct HTML uses littlep:// protocol' : 'Hosted preview uses littlep:// protocol');
+      results.push(source.startsWith('file:')
+        ? 'Direct HTML uses littlep:// protocol'
+        : source.includes('127.0.0.1')
+          ? 'Local static preview uses littlep:// protocol'
+          : 'Hosted page uses littlep:// protocol');
       await page.close();
     }
     assert.deepEqual(errors, []);

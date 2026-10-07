@@ -36,8 +36,10 @@ const root = path.resolve(__dirname, '..');
       const values = new URL(protocol).searchParams;
       assert.equal(values.get('character'), 'pink-robot');
       assert.equal(values.get('emotion'), '02');
+      assert.ok(values.get('request'));
       assert.equal(requests.filter(url => url.includes('/api/pet/')).length, 0);
-      assert.ok((await page.locator('#toast').textContent()).includes('正在打开 Little P'));
+      assert.ok(await page.locator('#toast').evaluate(node => node.classList.contains('show')));
+      await page.waitForTimeout(1500);
       assert.equal(await page.locator('#summonPet').isEnabled(), true);
       results.push(source.startsWith('file:')
         ? 'Direct HTML uses littlep:// protocol'

@@ -45,7 +45,9 @@ class Bridge(QObject):
     @pyqtSlot()
     def ready(self):
         self.window.is_ready = True
+        self.window.keep_on_screen()
         self.window.show()
+        self.window.raise_()
 
     @pyqtSlot(str)
     def changed(self, text):
@@ -194,9 +196,10 @@ class DesktopPet(QWidget):
         if self.is_ready:
             self.bridge.stateChanged.emit(json.dumps(self.state))
         if message['action'] == 'summon':
+            self.keep_on_screen()
             self.show()
             self.raise_()
-            self.keep_on_screen()
+            QTimer.singleShot(0, self.raise_)
 
     def update_gaze(self):
         if not self.is_ready or self.drag_origin:

@@ -103,6 +103,16 @@
         .catch(function () { desktopActive = false; });
     }, 120);
   }
+  var summonResetTimer = 0;
+  function openProtocolLink(url) {
+    var link = document.createElement('a');
+    link.href = url;
+    link.hidden = true;
+    link.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(function () { link.remove(); }, 1500);
+  }
   $('summonPet').addEventListener('click', async function () {
     var btn = $('summonPet');
     if (!desktopServicePage) {
@@ -110,10 +120,18 @@
       var state = desktopState();
       var query = new URLSearchParams({
         character: state.character, emotion: state.emotion,
-        sketch: String(state.sketch), lang: state.lang, theme: state.theme
+        sketch: String(state.sketch), lang: state.lang, theme: state.theme,
+        request: Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
       });
-      window.location.href = protocol + '://summon?' + query.toString();
+      btn.disabled = true;
+      btn.querySelector('[data-i18n]').textContent = I.t('summonBusy');
+      openProtocolLink(protocol + '://summon?' + query.toString());
       toast(I.t('summonOpeningApp'));
+      clearTimeout(summonResetTimer);
+      summonResetTimer = setTimeout(function () {
+        btn.disabled = false;
+        btn.querySelector('[data-i18n]').textContent = I.t('summonLabel');
+      }, 1400);
       return;
     }
     btn.disabled = true;

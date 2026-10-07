@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import threading
+import time
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import urlopen
 
@@ -32,6 +33,18 @@ def read_text(name, default=''):
 
 
 VERSION = read_text('VERSION', '0.0.0')
+
+
+def summon_running_pet(state, wait_seconds=0):
+    """Deliver a summon to an existing instance, including one still starting."""
+    deadline = time.monotonic() + max(0, wait_seconds)
+    while True:
+        response = request_pet('summon', state, timeout=.45)
+        if response:
+            return response
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(.12)
 
 
 def protocol_state(value):
@@ -101,25 +114,31 @@ def main():
         state = protocol_state(args.link)
     except ValueError:
         state = dict(DEFAULT_STATE)
-    existing = request_pet('summon', state)
+    existing = summon_running_pet(state)
     if existing:
         return 0
-    try:
-        with process_lock('desktop-pet'):
-            QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-            QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-            app = QApplication(sys.argv[:1])
-            app.setApplicationName('Little P')
-            window = DesktopPet(state)
-            updates = UpdateCheck()
-            updates.available.connect(offer_update)
-            QTimer.singleShot(1200, updates.start)
-            app._update_check = updates
-            app._pet_window = window
-            return app.exec_()
-    except InstanceRunningError:
-        request_pet('summon', state)
-        return 0
+    for attempt in range(2):
+        try:
+            with process_lock('desktop-pet'):
+                QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+                QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+                app = QApplication(sys.argv[:1])
+                app.setApplicationName('Little P')
+                window = DesktopPet(state)
+                updates = UpdateCheck()
+                updates.available.connect(offer_update)
+                QTimer.singleShot(1200, updates.start)
+                app._update_check = updates
+                app._pet_window = window
+                return app.exec_()
+        except InstanceRunningError:
+            # Another protocol click may have started the process milliseconds
+            # earlier. Wait for its control server instead of silently exiting.
+            if summon_running_pet(state, wait_seconds=15):
+                return 0
+            if attempt == 1:
+                return 1
+    return 1
 
 
 if __name__ == '__main__':

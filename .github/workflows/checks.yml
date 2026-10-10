@@ -19,7 +19,11 @@ jobs:
         with:
           node-version: '24'
       - name: Check Python
-        run: python -m py_compile runtime_paths.py desktop_host.py desktop/pet.py desktop/menu.py littlep_app.py serve.py
+        run: python -m py_compile runtime_paths.py desktop_host.py desktop/pet.py desktop/menu.py desktop/health_api.py desktop/health_assistant.py littlep_app.py serve.py
+      - name: Check health assistant adapters and local secret storage
+        run: python scripts/verify-health-assistant.py
+      - name: Check release privacy
+        run: python scripts/verify-release-privacy.py
       - name: Check JavaScript
         shell: pwsh
         run: |

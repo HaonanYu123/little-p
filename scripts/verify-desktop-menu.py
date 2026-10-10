@@ -8,7 +8,7 @@ sys.path.insert(0, str(ROOT))
 from PyQt5.QtCore import QPoint, QPointF, QTimer, Qt
 from PyQt5.QtGui import QWheelEvent
 from PyQt5.QtTest import QTest
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QLineEdit
 from desktop.pet import DesktopPet
 from desktop_host import DEFAULT_STATE, EMOTIONS
 
@@ -117,11 +117,27 @@ def final_checks():
         window.menu.grab().save(str(ROOT / 'output' / 'desktop-menu-work.png'))
         image = window.menu.grab().toImage()
         check('Popup background stays opaque over the desktop', image.pixelColor(image.width() // 2, 12).alpha() > 240)
-        check('Only switch-style and dismiss actions remain', window.menu.style_button.text() == '切换样式' and window.menu.dismiss_button.text() == '收起')
+        check('Health assistant joins the existing footer actions', window.menu.style_button.text() == '切换样式' and window.menu.health_button.text() == '健康助手' and window.menu.dismiss_button.text() == '收起')
         window.change_state(character='pink-robot', emotion='14')
         window.menu.select_group('emotion')
         window.menu.grab().save(str(ROOT / 'output' / 'desktop-menu-pink.png'))
         check('Character portrait and current expression follow style changes', window.menu.title.text() == '蝴蝶结小 P' and window.menu.hint.toolTip() == window.menu.buttons['14'].toolTip() and not window.menu.avatar.pixmap().isNull())
+        QTest.mouseClick(window.menu.health_button, Qt.LeftButton)
+        QApplication.processEvents()
+        check('Health assistant opens as a native desktop window', window.health_assistant is not None and window.health_assistant.isVisible())
+        check('Health assistant exposes native Skill plus five compatible API formats', window.health_assistant.protocol.count() == 6 and window.health_assistant.api_key.echoMode() == QLineEdit.Password)
+        check('Native Skill sync is explicit and visible only for Responses mode', window.health_assistant.protocol.currentData() == 'openai_responses' and window.health_assistant.sync_skill_button.isVisible())
+        window.health_assistant.endpoint.clear()
+        window.health_assistant.model.clear()
+        window.health_assistant.protocol.setCurrentIndex(window.health_assistant.protocol.findData('deepseek'))
+        QApplication.processEvents()
+        check('DeepSeek entry fills the official endpoint and current default model', window.health_assistant.endpoint.text() == 'https://api.deepseek.com/chat/completions' and window.health_assistant.model.text() == 'deepseek-flash')
+        window.health_assistant.grab().save(str(ROOT / 'output' / 'health-assistant.png'))
+        window.health_assistant.tabs.setCurrentWidget(window.health_assistant.chat_tab)
+        QApplication.processEvents()
+        window.health_assistant.grab().save(str(ROOT / 'output' / 'health-assistant-chat.png'))
+        window.health_assistant.hide()
+        window.show_menu()
         QTest.mouseClick(window.menu.dismiss_button, Qt.LeftButton)
         check('Dismiss closes the native pet', not window.isVisible())
         finish()

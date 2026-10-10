@@ -4,3 +4,8 @@ output/
 node_modules/
 build/
 dist/
+.env
+.env.*
+!.env.example
+*.local.json
+health-assistant.json

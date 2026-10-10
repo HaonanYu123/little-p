@@ -140,11 +140,16 @@ class PetMenu(QFrame):
         self.style_button.setObjectName('styleButton')
         self.style_button.setFixedHeight(27)
         self.style_button.clicked.connect(self.switch_style)
+        self.health_button = QPushButton(self)
+        self.health_button.setObjectName('healthButton')
+        self.health_button.setFixedHeight(27)
+        self.health_button.clicked.connect(self.open_health)
         self.dismiss_button = QPushButton(self)
         self.dismiss_button.setObjectName('dismissButton')
         self.dismiss_button.setFixedHeight(27)
         self.dismiss_button.clicked.connect(self.pet.close)
         footer.addWidget(self.style_button)
+        footer.addWidget(self.health_button)
         footer.addStretch()
         self.key_hint = QLabel('↔', self)
         self.key_hint.setObjectName('keyHint')
@@ -185,6 +190,8 @@ class PetMenu(QFrame):
                 QPushButton[role="emotion"][selected="true"] {{background:{selected_fill};color:{accent};font-weight:500}}
                 QPushButton#styleButton, QPushButton#dismissButton {{color:{muted};font-size:10px;padding:0 6px}}
                 QPushButton#styleButton:hover, QPushButton#dismissButton:hover {{color:{text}}}
+                QPushButton#healthButton {{color:{accent};background:{selected_fill};border-color:{selected_fill};font-size:10px;font-weight:600;padding:0 7px}}
+                QPushButton#healthButton:hover {{border-color:{accent}}}
             ''')
             self.icons = {e['id']: (face_icon(e.get('eye', 'calm'), muted), face_icon(e.get('eye', 'calm'), accent)) for e in self.emotions}
             filename = 'pink-head-soft-oval.png' if pink else 'robot-shell.png'
@@ -225,8 +232,10 @@ class PetMenu(QFrame):
                 button.setToolTip(label)
                 button.setAccessibleName(label)
         self.style_button.setText('Switch style' if english else '切换样式')
+        self.health_button.setText('Health' if english else '健康助手')
         self.dismiss_button.setText('Dismiss' if english else '收起')
         self.style_button.setToolTip(('Current: ' if english else '当前：') + character)
+        self.health_button.setToolTip('Open the private health & food assistant' if english else '打开本地配置的健康饮食助手')
         self.key_hint.setToolTip('Scroll or ← / →' if english else '滚轮或 ← / → 切换表情')
         for emotion_id, button in self.buttons.items():
             selected = emotion_id == state['emotion']
@@ -261,6 +270,10 @@ class PetMenu(QFrame):
     def switch_style(self):
         character = 'pink-robot' if self.pet.state['character'] == 'robot' else 'robot'
         self.pet.change_state(character=character)
+
+    def open_health(self):
+        self.hide()
+        self.pet.open_health_assistant()
 
     def paintEvent(self, event):
         painter = QPainter(self)

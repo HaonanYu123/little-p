@@ -4,7 +4,10 @@ datas = [
     ('VERSION', '.'),
     ('distribution.json', '.'),
     ('assets', 'assets'),
-    ('desktop', 'desktop'),
+    ('desktop/pet.html', 'desktop'),
+    ('desktop/pet.js', 'desktop'),
+    ('desktop/health_system.md', 'desktop'),
+    ('desktop/health_skill', 'desktop/health_skill'),
     ('engine', 'engine'),
     ('site/robot.js', 'site'),
 ]

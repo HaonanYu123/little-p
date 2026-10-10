@@ -24,7 +24,10 @@ def wait_for(test, seconds=20):
 
 
 request_pet('dismiss')
-time.sleep(.4)
+deadline = time.monotonic() + 10
+while time.monotonic() < deadline and request_pet('status', timeout=.25):
+    time.sleep(.15)
+assert request_pet('status', timeout=.25) is None, 'Existing desktop pet did not stop before packaged launch'
 first = subprocess.Popen([
     str(EXE),
     'littlep://summon?character=pink-robot&emotion=02&request=verify-cold',

@@ -19,6 +19,7 @@ from PyQt5.QtGui import QColor, QCursor, QIcon
 from PyQt5.QtWidgets import QApplication, QVBoxLayout, QWidget
 from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from PyQt5.QtWebChannel import QWebChannel
+from desktop.health_assistant import HealthAssistantDialog
 from desktop.menu import PetMenu
 
 
@@ -111,6 +112,7 @@ class DesktopPet(QWidget):
         self.is_ready = False
         self.drag_origin = None
         self.menu = None
+        self.health_assistant = None
         self.emotions = []
         self.verify = verify
         self.setWindowTitle('P Studio Desktop Pet')
@@ -231,6 +233,14 @@ class DesktopPet(QWidget):
         if self.menu:
             self.menu.popup()
 
+    def open_health_assistant(self):
+        if self.health_assistant is None:
+            self.health_assistant = HealthAssistantDialog(self)
+        self.health_assistant.sync_state()
+        self.health_assistant.show()
+        self.health_assistant.raise_()
+        self.health_assistant.activateWindow()
+
     def start_verify(self):
         if self.is_ready:
             self.verify_timer.stop()
@@ -252,6 +262,8 @@ class DesktopPet(QWidget):
         self.is_ready = False
         if self.menu:
             self.menu.hide()
+        if self.health_assistant:
+            self.health_assistant.hide()
         self.gaze_timer.stop()
         self.control_server.shutdown()
         self.control_server.server_close()

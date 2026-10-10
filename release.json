@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.4.1",
   "download_url": "https://github.com/HaonanYu123/little-p/releases/latest/download/LittleP-Setup.exe",
-  "notes": "提升网页重复召唤和桌宠启动可靠性"
+  "notes": "新增健康饮食助手、DeepSeek 官方 API 入口和多模型配置；API Key 仅加密保存在本机"
 }

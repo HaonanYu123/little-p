@@ -1,0 +1,43 @@
+name: Release Windows installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: python -m pip install -r desktop/requirements.txt pyinstaller
+      - name: Verify health adapters and release privacy
+        run: |
+          python scripts/verify-health-assistant.py
+          python scripts/verify-release-privacy.py
+      - name: Build desktop application
+        run: python -m PyInstaller --noconfirm --clean LittleP.spec
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path -LiteralPath $iscc)) {
+            throw 'Inno Setup 6 is not available on this Windows runner.'
+          }
+          & $iscc installer\LittleP.iss
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $manifest = Get-Content -LiteralPath release.json -Raw | ConvertFrom-Json
+          gh release create $env:GITHUB_REF_NAME output\installer\LittleP-Setup.exe `
+            --title "Little P $($manifest.version)" `
+            --notes $manifest.notes

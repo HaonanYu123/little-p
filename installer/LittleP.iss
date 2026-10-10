@@ -1,5 +1,5 @@
 #define MyAppName "Little P"
-#define MyAppVersion "0.2.0"
+#define MyAppVersion "0.4.1"
 #define MyAppExeName "LittleP.exe"
 
 [Setup]
@@ -9,9 +9,12 @@ AppVersion={#MyAppVersion}
 DefaultDirName={autopf}\LittleP
 DefaultGroupName={#MyAppName}
 PrivilegesRequired=admin
+PrivilegesRequiredOverridesAllowed=dialog commandline
+UsePreviousPrivileges=no
+ChangesAssociations=yes
 OutputDir=..\output\installer
 OutputBaseFilename=LittleP-Setup
-Compression=lzma2
+Compression=lzma2/fast
 SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayIcon={app}\{#MyAppExeName}
@@ -27,10 +30,10 @@ Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Registry]
-Root: HKCR; Subkey: "littlep"; ValueType: string; ValueName: ""; ValueData: "URL:Little P Protocol"; Flags: uninsdeletekey
-Root: HKCR; Subkey: "littlep"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
-Root: HKCR; Subkey: "littlep\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
-Root: HKCR; Subkey: "littlep\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
+Root: HKA; Subkey: "Software\Classes\littlep"; ValueType: string; ValueName: ""; ValueData: "URL:Little P Protocol"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\littlep"; ValueType: string; ValueName: "URL Protocol"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\littlep\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKA; Subkey: "Software\Classes\littlep\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "启动 {#MyAppName}"; Flags: nowait postinstall skipifsilent
